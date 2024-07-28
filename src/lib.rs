@@ -33,32 +33,36 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     let matching_lines = search(&config.query, &file_content);
 
     for line in matching_lines {
-        let mut line_formatted = String::from("");
-
-        let line_words = line.split(" ");
-
-        for word in line_words {
-            if word.contains(&config.query) {
-                let highlighted_word = " **".to_string() + word + "** ";
-                line_formatted.push_str(&highlighted_word.to_uppercase());
-                continue;
-            }
-
-            let word_with_spaces_on_sides = " ".to_string() + word;
-            line_formatted.push_str(&word_with_spaces_on_sides)
-        }
-
-        println!("{}", line_formatted)
+        println!("{}", formatt_line(&config.query, line))
     }
 
     Ok(())
+}
+
+fn formatt_line(query: &str, line: &str) -> String {
+    let mut line_formatted = String::from("");
+
+    let line_words = line.split(" ");
+
+    for word in line_words {
+        if word.to_lowercase().contains(&query.to_lowercase()) {
+            let highlighted_word = "**".to_string() + word + "** ";
+            line_formatted.push_str(&highlighted_word);
+            continue;
+        }
+
+        let word_with_spaces_on_sides = word.to_string() + " ";
+        line_formatted.push_str(&word_with_spaces_on_sides)
+    }
+
+    line_formatted
 }
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut matching_lines: Vec<&str> = vec![];
 
     for line in contents.lines() {
-        if line.contains(query.trim()) {
+        if line.to_lowercase().contains(&query.trim().to_lowercase()) {
             matching_lines.push(line)
         }
     }
