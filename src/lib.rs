@@ -33,7 +33,22 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     let matching_lines = search(&config.query, &file_content);
 
     for line in matching_lines {
-        println!("{}", line)
+        let mut line_formatted = String::from("");
+
+        let line_words = line.split(" ");
+
+        for word in line_words {
+            if word.contains(&config.query) {
+                let highlighted_word = " **".to_string() + word + "** ";
+                line_formatted.push_str(&highlighted_word.to_uppercase());
+                continue;
+            }
+
+            let word_with_spaces_on_sides = " ".to_string() + word;
+            line_formatted.push_str(&word_with_spaces_on_sides)
+        }
+
+        println!("{}", line_formatted)
     }
 
     Ok(())
@@ -65,7 +80,7 @@ Meliorate: To improve or make something better.";
 
         assert_eq!(
             vec!["Condense: To make something shorter or simpler."],
-            search(&query, &contents)
+            search(query, contents)
         );
     }
 
@@ -78,6 +93,6 @@ Condense: To make something shorter or simpler.
 Meliorate: To improve or make something better.";
 
         let empty_vec: Vec<&str> = vec![];
-        assert_eq!(empty_vec, search(&query, &contents));
+        assert_eq!(empty_vec, search(query, contents));
     }
 }
