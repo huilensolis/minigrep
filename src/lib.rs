@@ -7,18 +7,18 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            if args.len() < 2 {
-                return Err("missing search query and a file path parameters. \nexample: cargo run search_query path/to/my/file.txt");
-            }
+    pub fn new(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        args.next();
 
-            return Err("must receive a file path parameter. \nexample: cargo run search_query path/to/my/file.txt");
-        }
+        let query = match args.next() {
+            Some(value) => value,
+            None => return Err("missing parameter query"),
+        };
 
-        let query = &args[1].clone();
-
-        let file_path = &args[2].clone();
+        let file_path = match args.next() {
+            Some(value) => value,
+            None => return Err("missing parameter file path"),
+        };
 
         Ok(Config {
             query: query.to_string(),
@@ -40,32 +40,25 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
 }
 
 fn formatt_line(query: &str, line: &str) -> String {
-    let mut line_formatted = String::from("");
+    let line_formatted = line
+        .split(" ")
+        .map(|word| {
+            if word.to_lowercase().contains(&query.to_lowercase()) {
+                return "**".to_string() + word + "**" + " ";
+            }
 
-    let line_words = line.split(" ");
-
-    for word in line_words {
-        if word.to_lowercase().contains(&query.to_lowercase()) {
-            let highlighted_word = "**".to_string() + word + "** ";
-            line_formatted.push_str(&highlighted_word);
-            continue;
-        }
-
-        let word_with_spaces_on_sides = word.to_string() + " ";
-        line_formatted.push_str(&word_with_spaces_on_sides)
-    }
+            word.to_string() + " "
+        })
+        .collect();
 
     line_formatted
 }
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut matching_lines: Vec<&str> = vec![];
-
-    for line in contents.lines() {
-        if line.to_lowercase().contains(&query.trim().to_lowercase()) {
-            matching_lines.push(line)
-        }
-    }
+    let matching_lines: Vec<&str> = contents
+        .lines()
+        .filter(|line| line.to_lowercase().contains(&query.to_lowercase()))
+        .collect();
 
     matching_lines
 }
